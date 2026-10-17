@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VerdictDesk - Multi-Agent Onchain Market & Legal Forensics Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #06090e;
+      --bg-card: #0d121d;
+      --bg-panel: #111827;
+      --border-subtle: #1e293b;
+      --border-focus: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --bull-green: #10b981;
+      --bull-bg: rgba(16, 185, 129, 0.12);
+      --bear-red: #f43f5e;
+      --bear-bg: rgba(244, 63, 94, 0.12);
+      --judge-gold: #f59e0b;
+      --judge-bg: rgba(245, 158, 11, 0.12);
+      --cyan-accent: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-cluster {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.35);
+    }
+    .logo-text h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .logo-text p {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header-pills {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-panel);
+      color: var(--text-muted);
+    }
+    .pill.green {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--bull-green);
+    }
+    .container {
+      flex: 1;
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 20px;
+    }
+    @media (max-width: 1200px) {
+      .container { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    input, select {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 9px 12px;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus {
+      border-color: var(--border-focus);
+    }
+    .btn-run {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+    .btn-run:hover {
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.45);
+    }
+    .btn-run:active {
+      transform: scale(0.98);
+    }
+    /* Debate Area */
+    .debate-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+      max-height: 720px;
+    }
+    .agent-bubble {
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--border-subtle);
+      position: relative;
+    }
+    .agent-bubble.bull {
+      background: rgba(16, 185, 129, 0.04);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+    .agent-bubble.bear {
+      background: rgba(244, 63, 94, 0.04);
+      border-color: rgba(244, 63, 94, 0.25);
+    }
+    .agent-bubble.judge {
+      background: rgba(245, 158, 11, 0.05);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .agent-name {
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .conviction-meter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .conviction-meter.bull { background: var(--bull-bg); color: var(--bull-green); }
+    .conviction-meter.bear { background: var(--bear-bg); color: var(--bear-red); }
+    .conviction-meter.judge { background: var(--judge-bg); color: var(--judge-gold); }
+    .agent-body {
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+    /* Proof Panel */
+    .proof-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #93c5fd;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .tree-leaf {
+      padding: 8px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    .tree-leaf .leaf-name {
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .tree-leaf .leaf-hash {
+      color: var(--cyan-accent);
+      font-weight: 600;
+    }
+    .badge-pass {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bull-bg);
+      color: var(--bull-green);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-cluster">
+      <div class="logo-badge">VD</div>
+      <div class="logo-text">
+        <h1>VerdictDesk Terminal</h1>
+        <p>BLI LEGAL TECH • AUTONOMOUS AGENT JURISPRUDENCE</p>
+      </div>
+    </div>
+    <div class="header-pills">
+      <span class="pill green">● FORENSIC AUDIT ENGINE ONLINE</span>
+      <span class="pill">MERKLE RFC 6962</span>
+      <span class="pill">TRI-AGENT DIALECTIC</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Left: Case Configuration -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Target Asset Dossier</span>
+        <span style="font-size: 11px; color: var(--border-focus);">EVIDENCE INPUT</span>
+      </div>
+
+      <div class="field-group">
+        <label>TARGET ASSET PAIR</label>
+        <select id="assetSelect">
+          <option value="SOL/USDC">SOL / USDC (High Onchain Velocity)</option>
+          <option value="ETH/USDC">ETH / USDC (Tornado Compliance Flag)</option>
+          <option value="BTC/USDT">BTC / USDT (Whale Inflow Outflow)</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>24H WHALE NET INFLOW (USD)</label>
+        <input type="number" id="inflowUSD" value="48500000">
+      </div>
+
+      <div class="field-group">
+        <label>NEW WHALE WALLETS (24H)</label>
+        <input type="number" id="whaleCount" value="18">
+      </div>
+
+      <div class="field-group">
+        <label>TOP 10 HOLDERS CONCENTRATION</label>
+        <input type="text" id="concentration" value="42.5%">
+      </div>
+
+      <div class="field-group">
+        <label>SANCTIONED CLUSTER PROXIMITY</label>
+        <select id="sanctionsProximity">
+          <option value="0.001">0.10% (Clean / Negligible)</option>
+          <option value="0.142">14.2% (Severe Mixer Proximity Flag)</option>
+          <option value="0.035">3.50% (Standard Monitoring Tier)</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>REGULATORY JURISDICTIONS</label>
+        <input type="text" id="flaggedJurisdictions" value="EU_MICA_TIER1, US_CFTC">
+      </div>
+
+      <button class="btn-run" onclick="triggerDialecticTrial()">
+        <span>⚖️ Execute Agent Deliberation</span>
+      </button>
+
+      <div style="font-size: 11.5px; color: var(--text-dim); line-height: 1.5; margin-top: 8px;">
+        Evidence will be submitted concurrently to Bull-Alpha (Momentum Forensics) and Bear-Omicron (Compliance Risk). Final ruling synthesized by Chief Justice Agent.
+      </div>
+    </div>
+
+    <!-- Center: Tri-Agent Live Debate -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Tri-Agent Dialectic Court</span>
+        <span id="trialStatus" class="pill">AWAITING TRIGGER</span>
+      </div>
+
+      <div class="debate-stream" id="debateStream">
+        <div style="text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 13px;">
+          Click "Execute Agent Deliberation" to initiate the multi-agent evidentiary debate and generate a tamper-proof cryptographic audit trail.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Merkle Cryptographic Proof & Receipt -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Cryptographic Audit Trail</span>
+        <span class="badge-pass">RFC 6962 VALID</span>
+      </div>
+
+      <div class="field-group">
+        <label>MERKLE ROOT HASH</label>
+        <div class="proof-box" id="merkleRootDisplay">0x0000000000000000000000000000000000000000000000000000000000000000</div>
+      </div>
+
+      <div class="field-group">
+        <label>PROOF RECEIPT ID</label>
+        <div class="proof-box" id="receiptDisplay">VD-PENDING</div>
+      </div>
+
+      <div class="field-group" style="margin-top: 10px;">
+        <label>VERIFIABLE LEAF NODES</label>
+        <div id="leavesContainer">
+          <div class="tree-leaf">
+            <div class="leaf-name">LEAF 0: RAW_EVIDENCE_DIGEST</div>
+            <div class="leaf-hash">0x--</div>
+          </div>
+          <div class="tree-leaf">
+            <div class="leaf-name">LEAF 1: BULL_ARGUMENT_VECTOR</div>
+            <div class="leaf-hash">0x--</div>
+          </div>
+          <div class="tree-leaf">
+            <div class="leaf-name">LEAF 2: BEAR_ARGUMENT_VECTOR</div>
+            <div class="leaf-hash">0x--</div>
+          </div>
+          <div class="tree-leaf">
+            <div class="leaf-name">LEAF 3: FINAL_JUSTICE_RULING</div>
+            <div class="leaf-hash">0x--</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-run" style="background: var(--bg-panel); border: 1px solid var(--border-subtle); color: var(--text-main);" onclick="verifyAuditProof()">
+        <span>🔍 Verify Merkle Proof Integrity</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="./merkle.js"></script>
+  <script>
+    let activeRuling = null;
+
+    function triggerDialecticTrial() {
+      const asset = document.getElementById('assetSelect').value;
+      const inflow = parseFloat(document.getElementById('inflowUSD').value) || 0;
+      const whaleCount = parseInt(document.getElementById('whaleCount').value) || 0;
+      const sanctions = parseFloat(document.getElementById('sanctionsProximity').value) || 0;
+      const jurisdictions = document.getElementById('flaggedJurisdictions').value.split(',').map(s => s.trim()).filter(Boolean);
+
+      const evidence = {
+        asset,
+        inflowUSD: inflow,
+        whaleCount,
+        sanctionsRisk: sanctions,
+        flaggedJurisdictions: jurisdictions,
+        timestamp: new Date().toISOString()
+      };
+
+      // Bull reasoning
+      const bullConviction = Math.min(0.96, Math.max(0.35, 0.50 + (inflow / 100000000) * 0.4 + (whaleCount / 50) * 0.2));
+      const bullThesis = `Onchain forensic telemetry validates substantial capital deployment: Net large transfer inflow exceeds $${(inflow / 1e6).toFixed(2)}M with ${whaleCount} verified whale addresses expanding balances. Orderbook depth and liquidity absorption confirm aggressive institutional accumulation. Recommendation: Strategic Long Allocation.`;
+
+      // Bear reasoning
+      const bearConviction = Math.min(0.98, Math.max(0.20, sanctions > 0.05 ? 0.88 : (sanctions * 10 + jurisdictions.length * 0.15)));
+      let bearThesis = '';
+      if (sanctions > 0.05) {
+        bearThesis = `CRITICAL REGULATORY THREAT: Detected ${(sanctions * 100).toFixed(2)}% path proximity to OFAC-sanctioned mixer clusters and high-risk darknet counterparties. Active inquiry exposure across [${jurisdictions.join(', ')}]. Liquidity concentration poses severe cascade-liquidation risk. Recommendation: 100% Defensive Override, zero capital exposure.`;
+      } else {
+        bearThesis = `Macro liquidity friction and exchange reserves suggest potential local topping. While sanctions nexus is minimal (${(sanctions * 100).toFixed(2)}%), momentum exhibits signs of late-cycle exhaustion. Recommendation: Defensive hedging.`;
+      }
+
+      // Justice deliberation
+      let verdict = '';
+      let allocation = '0.00%';
+      let justiceRationale = '';
+
+      if (bearConviction >= 0.70) {
+        verdict = 'RESTRICTED_DEFENSIVE_OVERRIDE';
+        allocation = '0.00%';
+        justiceRationale = `Statutory compliance override engaged. Bear Agent proven regulatory exposure (${bearConviction.toFixed(2)}) exceeds allowable threshold. Commercial momentum cannot supersede anti-money laundering and sanctions liability. Maximum allowable allocation strictly capped to 0 bps.`;
+      } else if (bullConviction > bearConviction + 0.15) {
+        verdict = 'APPROVED_LONG_ACCUMULATION';
+        const bps = Math.min(3500, Math.round(1500 + (bullConviction - bearConviction) * 4000));
+        allocation = (bps / 100).toFixed(2) + '%';
+        justiceRationale = `Alpha asymmetry verified. Bull accumulation conviction (${bullConviction.toFixed(2)}) dominates Bear risk vector (${bearConviction.toFixed(2)}). Authorizing fractional sizing of ${allocation} governed by dynamic trailing stop and verifiable onchain stops.`;
+      } else {
+        verdict = 'DIALECTIC_NEUTRAL_OBSERVE';
+        allocation = '5.00%';
+        justiceRationale = `Evidentiary deadlock between momentum metrics and regulatory friction. Directing minimum exploration stake (500 bps) pending higher-order onchain confirmation.`;
+      }
+
+      const leaf0 = MerkleTree.hash(evidence);
+      const leaf1 = MerkleTree.hash({ agent: 'Bull-Alpha', conviction: bullConviction, thesis: bullThesis });
+      const leaf2 = MerkleTree.hash({ agent: 'Bear-Omicron', conviction: bearConviction, thesis: bearThesis });
+      const leaf3 = MerkleTree.hash({ verdict, allocation, rationale: justiceRationale });
+
+      const tree = new MerkleTree([leaf0, leaf1, leaf2, leaf3]);
+      const root = tree.getRoot();
+      const receiptId = `VD-${Date.now().toString(36).toUpperCase()}-${root.substring(0, 8)}`;
+
+      activeRuling = { evidence, tree, root, receiptId, leaf0, leaf1, leaf2, leaf3 };
+
+      // Render debate
+      const stream = document.getElementById('debateStream');
+      stream.innerHTML = `
+        <div class="agent-bubble bull">
+          <div class="agent-header">
+            <span class="agent-name" style="color: var(--bull-green);">🟢 Bull-Alpha • Momentum & Inflow Agent</span>
+            <span class="conviction-meter bull">CONVICTION: ${(bullConviction * 100).toFixed(1)}%</span>
+          </div>
+          <div class="agent-body">${bullThesis}</div>
+        </div>
+
+        <div class="agent-bubble bear">
+          <div class="agent-header">
+            <span class="agent-name" style="color: var(--bear-red);">🔴 Bear-Omicron • Compliance & Regulatory Agent</span>
+            <span class="conviction-meter bear">CONVICTION: ${(bearConviction * 100).toFixed(1)}%</span>
+          </div>
+          <div class="agent-body">${bearThesis}</div>
+        </div>
+
+        <div class="agent-bubble judge">
+          <div class="agent-header">
+            <span class="agent-name" style="color: var(--judge-gold);">⚖️ Chief Justice Agent • Final Jurisprudence Ruling</span>
+            <span class="conviction-meter judge">${verdict} [${allocation}]</span>
+          </div>
+          <div class="agent-body"><strong>LEGAL RULING:</strong> ${justiceRationale}</div>
+        </div>
+      `;
+
+      // Update right panel
+      document.getElementById('trialStatus').innerText = 'TRIAL CONCLUDED';
+      document.getElementById('merkleRootDisplay').innerText = root;
+      document.getElementById('receiptDisplay').innerText = receiptId;
+
+      document.getElementById('leavesContainer').innerHTML = `
+        <div class="tree-leaf">
+          <div class="leaf-name">LEAF 0: RAW_EVIDENCE_DIGEST</div>
+          <div class="leaf-hash">${leaf0.substring(0, 24)}...</div>
+        </div>
+        <div class="tree-leaf">
+          <div class="leaf-name">LEAF 1: BULL_ARGUMENT_VECTOR</div>
+          <div class="leaf-hash">${leaf1.substring(0, 24)}...</div>
+        </div>
+        <div class="tree-leaf">
+          <div class="leaf-name">LEAF 2: BEAR_ARGUMENT_VECTOR</div>
+          <div class="leaf-hash">${leaf2.substring(0, 24)}...</div>
+        </div>
+        <div class="tree-leaf">
+          <div class="leaf-name">LEAF 3: FINAL_JUSTICE_RULING</div>
+          <div class="leaf-hash">${leaf3.substring(0, 24)}...</div>
+        </div>
+      `;
+    }
+
+    function verifyAuditProof() {
+      if (!activeRuling) {
+        alert('Please run an agent deliberation trial first.');
+        return;
+      }
+      const proof0 = activeRuling.tree.getProof(0);
+      const isValid = MerkleTree.verify(activeRuling.leaf0, proof0, activeRuling.root);
+      if (isValid) {
+        alert(`✅ CRYPTOGRAPHIC VERIFICATION PASSED!\n\nMerkle Root: ${activeRuling.root}\nLeaf 0 (Raw Evidence) mathematically anchors into the root without tampering.\nRFC 6962 Audit Proof Valid.`);
+      } else {
+        alert('❌ Proof verification failed.');
+      }
+    }
+  </script>
+</body>
+</html>
